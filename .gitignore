@@ -1,0 +1,8 @@
+# Python — privremeni fajlovi koje git ne treba da pamti
+venv/
+__pycache__/
+*.pyc
+
+# Tajne (API ključevi) i lokalna baza — NIKAD ne idu na internet
+.env
+*.db
