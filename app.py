@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from flask import Flask, redirect, render_template, request, url_for
 
 import baza
+import uvoz_prodaje
 
 app = Flask(__name__)
 
@@ -167,6 +168,27 @@ def promeni_status(stavka_id):
         dani=request.form.get("dani", 3),
         poruka=f"✔ {stavka['naziv']}: {tekst}",
     ))
+
+
+@app.route("/prodaja/uvoz")
+def uvoz_ekran():
+    """Ekran za uvoz prodaje iz CSV fajla."""
+    return render_template("uvoz.html", rezultat=None)
+
+
+@app.route("/prodaja/uvoz", methods=["POST"])
+def uvoz_obrada():
+    """Stigao fajl — pročitaj ga i prikaži izveštaj šta je uvezeno."""
+    fajl = request.files.get("fajl")
+    if fajl is None or fajl.filename == "":
+        return render_template("uvoz.html", rezultat={
+            "ok": False, "poruka_greske": "Nisi izabrao fajl.",
+        })
+
+    veza = baza.konekcija()
+    rezultat = uvoz_prodaje.uvezi_csv(fajl.read(), trenutna_radnja(veza), veza)
+    veza.close()
+    return render_template("uvoz.html", rezultat=rezultat)
 
 
 MESECI = {

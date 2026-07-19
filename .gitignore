@@ -6,3 +6,6 @@ __pycache__/
 # Tajne (API ključevi) i lokalna baza — NIKAD ne idu na internet
 .env
 *.db
+
+# Probni fajlovi koje pravi napravi_probni_csv.py
+prodaja_primer.csv

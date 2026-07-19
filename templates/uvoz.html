@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+<!-- uvoz.html — ekran za uvoz prodaje iz CSV fajla (izvoz iz kasa-programa). -->
+{% block sadrzaj %}
+<h1>Uvoz prodaje</h1>
+<p class="sivo">Izaberi CSV fajl sa prodajom iz kase. Potrebne kolone:
+<strong>datum, barkod, kolicina</strong> (naziv nije obavezan).</p>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="fajl" accept=".csv,text/csv" required>
+    <button type="submit">Uvezi</button>
+</form>
+
+{% if rezultat %}
+    {% if not rezultat.ok %}
+    <div class="poruka greska">✖ {{ rezultat.poruka_greske }}</div>
+    {% else %}
+    <div class="poruka">
+        ✔ Uvezeno {{ rezultat.uvezeno }} redova
+        {%- if rezultat.dani %} za dane: {{ rezultat.dani | join(", ") }}{% endif %}.
+        <br>Ponovni uvoz istog dana ne duplira brojke — zamenjuje ih.
+    </div>
+    {% if rezultat.nepoznati %}
+    <div class="poruka zuta">
+        Nepoznati barkodi ({{ rezultat.nepoznati | length }}) — dodaj ih kroz
+        📦 Prijem pa uvezi fajl ponovo:
+        <ul>
+        {% for n in rezultat.nepoznati %}
+            <li>{{ n.barkod }}{% if n.naziv %} — {{ n.naziv }}{% endif %} ({{ n.kolicina }} kom)</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {% if rezultat.greske %}
+    <div class="poruka zuta">
+        Preskočeni redovi:
+        <ul>{% for g in rezultat.greske %}<li>{{ g }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% endif %}
+{% endif %}
+{% endblock %}

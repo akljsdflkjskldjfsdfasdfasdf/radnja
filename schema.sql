@@ -31,3 +31,17 @@ CREATE TABLE IF NOT EXISTS stavke (
 
 -- Ubrzava traženje po roku (za ekran "ističe uskoro").
 CREATE INDEX IF NOT EXISTS idx_stavke_rok ON stavke(rok);
+
+-- Prodaja iz kase: jedan red = zbir prodaje jednog artikla za jedan dan.
+CREATE TABLE IF NOT EXISTS prodaja (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    store_id     INTEGER NOT NULL REFERENCES radnje(id),
+    proizvod_id  INTEGER NOT NULL REFERENCES proizvodi(id),
+    datum        TEXT NOT NULL,      -- dan prodaje, GGGG-MM-DD
+    kolicina     REAL NOT NULL       -- REAL zbog merenih artikala (npr. 0.350 kg)
+);
+
+-- Isti artikal + isti dan sme samo jednom: ponovni uvoz istog dana
+-- zamenjuje brojke umesto da ih duplira.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_prodaja_dan
+    ON prodaja(store_id, proizvod_id, datum);
