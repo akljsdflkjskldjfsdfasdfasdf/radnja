@@ -1,0 +1,23 @@
+<!doctype html>
+<!-- base.html — zajednički okvir svih ekrana (zaglavlje, stil, poruke).
+     Ostali ekrani se "ubacuju" u njega, da ne ponavljamo isti kod svuda. -->
+<html lang="sr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Radnja</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <a href="{{ url_for('prijem') }}">📦 Prijem</a>
+        <!-- Ovde u Koraku 4 dolazi link "⏰ Ističe uskoro" -->
+    </header>
+    <main>
+        {% if request.args.get('poruka') %}
+        <div class="poruka">{{ request.args.get('poruka') }}</div>
+        {% endif %}
+        {% block sadrzaj %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+<!-- prijem.html — prvi ekran prijema: unos barkoda (kamerom ili ručno). -->
+{% block sadrzaj %}
+<h1>Prijem robe</h1>
+
+<form method="post" action="{{ url_for('prijem_barkod') }}" id="forma-barkod">
+    <label for="barkod">Barkod</label>
+    <input type="text" id="barkod" name="barkod" inputmode="numeric"
+           placeholder="skeniraj ili ukucaj" required>
+    <button type="submit">Dalje</button>
+</form>
+
+<button type="button" id="dugme-kamera" class="sekundarno">📷 Skeniraj kamerom</button>
+<div id="skener"></div>
+
+<script src="{{ url_for('static', filename='html5-qrcode.min.js') }}"></script>
+<script>
+// Kamera: kad prepozna barkod, upiše ga u polje i odmah pošalje formu.
+const dugme = document.getElementById("dugme-kamera");
+const polje = document.getElementById("barkod");
+const forma = document.getElementById("forma-barkod");
+let skener = null;
+
+dugme.addEventListener("click", async () => {
+    if (skener) {                       // kamera već radi → ugasi je
+        await skener.stop();
+        skener = null;
+        dugme.textContent = "📷 Skeniraj kamerom";
+        return;
+    }
+    // Kažemo biblioteci koje vrste barkodova da traži (obični trgovački).
+    skener = new Html5Qrcode("skener", {
+        formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.CODE_128,
+        ],
+    });
+    dugme.textContent = "⏹ Ugasi kameru";
+    try {
+        await skener.start(
+            { facingMode: "environment" },                 // zadnja kamera
+            { fps: 10, qrbox: { width: 250, height: 150 } }, // okvir za ciljanje
+            async (tekst) => {                             // barkod prepoznat!
+                if (!skener) return;                       // zaštita od duplog okidanja
+                const s = skener;
+                skener = null;
+                await s.stop();
+                polje.value = tekst;
+                forma.submit();
+            }
+        );
+    } catch (greska) {
+        skener = null;
+        dugme.textContent = "📷 Skeniraj kamerom";
+        alert("Ne mogu da upalim kameru. Proveri da li si dozvolio pristup kameri. (" + greska + ")");
+    }
+});
+</script>
+{% endblock %}

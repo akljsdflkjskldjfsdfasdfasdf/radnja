@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+<!-- novi.html — nepoznat barkod: brzo dodaj proizvod i odmah upiši i prvi prijem. -->
+{% block sadrzaj %}
+<h1>Novi proizvod</h1>
+<p class="sivo">Barkod {{ barkod }} nije u bazi — dodaj ga jednom, više nikad.</p>
+
+<form method="post" action="{{ url_for('prijem_sacuvaj_novi') }}">
+    <input type="hidden" name="barkod" value="{{ barkod }}">
+
+    <label for="naziv">Naziv proizvoda</label>
+    <input type="text" id="naziv" name="naziv" placeholder="npr. Mleko 1l" required>
+
+    <label for="cena">Cena (nije obavezno)</label>
+    <input type="text" id="cena" name="cena" inputmode="decimal" placeholder="npr. 129,99">
+
+    <label for="rok">Rok trajanja</label>
+    <input type="date" id="rok" name="rok" required>
+
+    <label for="kolicina">Količina</label>
+    <input type="number" id="kolicina" name="kolicina" min="1" value="1" required>
+
+    <button type="submit">Sačuvaj proizvod i prijem</button>
+</form>
+
+<a class="link-nazad" href="{{ url_for('prijem') }}">← Nazad</a>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+<!-- poznat.html — proizvod je prepoznat: treba još samo rok i količina. -->
+{% block sadrzaj %}
+<h1>{{ proizvod['naziv'] }}</h1>
+<p class="sivo">Barkod: {{ proizvod['barkod'] }}</p>
+
+<form method="post" action="{{ url_for('prijem_sacuvaj') }}">
+    <input type="hidden" name="proizvod_id" value="{{ proizvod['id'] }}">
+
+    <label for="rok">Rok trajanja</label>
+    <input type="date" id="rok" name="rok" required>
+
+    <label for="kolicina">Količina</label>
+    <input type="number" id="kolicina" name="kolicina" min="1" value="1" required>
+
+    <button type="submit">Sačuvaj prijem</button>
+</form>
+
+<a class="link-nazad" href="{{ url_for('prijem') }}">← Nazad</a>
+{% endblock %}

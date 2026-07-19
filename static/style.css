@@ -1,0 +1,67 @@
+/* style.css — izgled aplikacije. Pravljeno prvo za telefon: krupna slova, krupna dugmad. */
+* { box-sizing: border-box; }
+
+body {
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+header {
+    background: #2d6a4f;
+    padding: 0.8rem 1rem;
+}
+header a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-right: 1rem;
+}
+
+main {
+    max-width: 480px;      /* na velikom ekranu ne razvlači se preko celog */
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+h1 { font-size: 1.4rem; }
+
+label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 600;
+}
+input {
+    width: 100%;
+    padding: 0.9rem;
+    font-size: 1.1rem;
+    margin-top: 0.3rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+}
+
+button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    border: 0;
+    border-radius: 8px;
+    background: #2d6a4f;
+    color: white;
+}
+button.sekundarno { background: #40916c; }
+
+.poruka {
+    background: #d8f3dc;
+    border: 1px solid #95d5b2;
+    padding: 0.8rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.sivo { color: #666; }
+#skener { margin-top: 1rem; }
+.link-nazad { display: inline-block; margin-top: 1rem; }
