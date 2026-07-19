@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+<!-- proizvod_izmena.html — izmena naziva i cene artikla (barkod se ne dira). -->
+{% block sadrzaj %}
+<h1>Izmena artikla</h1>
+<p class="sivo">Barkod: {{ proizvod['barkod'] }} (barkod se ne menja)</p>
+
+<form method="post">
+    <label for="naziv">Naziv</label>
+    <input type="text" id="naziv" name="naziv" value="{{ proizvod['naziv'] }}" required>
+
+    <label for="cena">Cena (nije obavezno)</label>
+    <input type="text" id="cena" name="cena" inputmode="decimal"
+           value="{{ '' if proizvod['cena'] is none else proizvod['cena'] }}"
+           placeholder="npr. 129,99">
+
+    <button type="submit">Sačuvaj</button>
+</form>
+
+<a class="link-nazad" href="{{ url_for('proizvodi') }}">← Nazad</a>
+{% endblock %}

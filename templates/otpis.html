@@ -20,7 +20,13 @@
     {% endif %}
     <ul class="spisak">
         {% for red in m.lista %}
-        <li>{{ red['datum_promene'] }} — {{ red['naziv'] }}, {{ red['kolicina'] }} kom</li>
+        <li>{{ red['datum_promene'] }} — {{ red['naziv'] }}, {{ red['kolicina'] }} kom
+            <form class="u-redu" method="post"
+                  action="{{ url_for('stavka_vrati', stavka_id=red['id']) }}"
+                  onsubmit="return confirm('Poništi otpis i vrati stavku?')">
+                <button class="sicusno">↩ Vrati</button>
+            </form>
+        </li>
         {% endfor %}
     </ul>
 </div>

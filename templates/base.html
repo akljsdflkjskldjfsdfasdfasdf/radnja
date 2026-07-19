@@ -7,6 +7,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Radnja</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Ovo troje omogućava "Dodaj na početni ekran" — sajt se ponaša kao aplikacija. -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#2d6a4f">
 </head>
 <body>
     <header>
@@ -15,6 +19,7 @@
         <a href="{{ url_for('otpis') }}">🗑 Otpis</a>
         <a href="{{ url_for('prodaja_statistika') }}">📈 Prodaja</a>
         <a href="{{ url_for('zalihe') }}">📊 Zalihe</a>
+        <a href="{{ url_for('proizvodi') }}">🏷 Artikli</a>
     </header>
     <main>
         {% if request.args.get('poruka') %}
@@ -22,5 +27,8 @@
         {% endif %}
         {% block sadrzaj %}{% endblock %}
     </main>
+    <footer>
+        <a href="{{ url_for('backup') }}">💾 Preuzmi kopiju baze</a>
+    </footer>
 </body>
 </html>

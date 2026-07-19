@@ -5,14 +5,16 @@
 <h1>Ističe uskoro</h1>
 
 <div class="filteri">
-    {% for n in [3, 7, 30] %}
+    {% for n in ["3", "7", "30"] %}
     <a href="{{ url_for('istice', dani=n) }}"
-       class="{{ 'aktivan' if dani == n else '' }}">{{ n }} dana</a>
+       class="{{ 'aktivan' if izbor == n else '' }}">{{ n }} dana</a>
     {% endfor %}
+    <a href="{{ url_for('istice', dani='sve') }}"
+       class="{{ 'aktivan' if izbor == 'sve' else '' }}">sve</a>
 </div>
 
 {% if not stavke %}
-<p class="sivo">Nema stavki koje ističu u narednih {{ dani }} dana. 🎉</p>
+<p class="sivo">Nema stavki za prikaz. 🎉</p>
 {% endif %}
 
 {% for s in stavke %}
@@ -20,19 +22,21 @@
     <div class="kartica-naslov">
         <strong>{{ s.naziv }}</strong>
         {% if s.status == 'snizeno' %}<span class="bedz">SNIŽENO</span>{% endif %}
+        <a class="izmeni" href="{{ url_for('stavka_izmena', stavka_id=s.id) }}"
+           title="Ispravi rok/količinu">✏</a>
     </div>
     <div class="sivo">{{ s.oznaka }} ({{ s.rok }}) — {{ s.kolicina }} kom</div>
     <div class="kartica-dugmad">
         <form method="post" action="{{ url_for('promeni_status', stavka_id=s.id) }}"
               onsubmit="return confirm('Označi kao sklonjeno/otpisano?')">
             <input type="hidden" name="status" value="otpisano">
-            <input type="hidden" name="dani" value="{{ dani }}">
+            <input type="hidden" name="dani" value="{{ izbor }}">
             <button class="malo crveno">Sklonjeno / otpisano</button>
         </form>
         {% if s.status != 'snizeno' %}
         <form method="post" action="{{ url_for('promeni_status', stavka_id=s.id) }}">
             <input type="hidden" name="status" value="snizeno">
-            <input type="hidden" name="dani" value="{{ dani }}">
+            <input type="hidden" name="dani" value="{{ izbor }}">
             <button class="malo narandzasto">Sniženo</button>
         </form>
         {% endif %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+<!-- proizvodi.html — šifarnik artikala: naziv, barkod, cena + izmena. -->
+{% block sadrzaj %}
+<h1>Artikli</h1>
+
+{% if not proizvodi %}
+<p class="sivo">Još nema artikala — dodaju se sami pri prvom prijemu.</p>
+{% else %}
+<table class="tabela">
+    <tr><th>Artikal</th><th>Barkod</th><th>Cena</th><th></th></tr>
+    {% for p in proizvodi %}
+    <tr>
+        <td>{{ p.naziv }}</td>
+        <td class="sivo">{{ p.barkod }}</td>
+        <td>{{ p.cena_tekst }}</td>
+        <td><a href="{{ url_for('proizvod_izmena', proizvod_id=p.id) }}">✏</a></td>
+    </tr>
+    {% endfor %}
+</table>
+<p class="sivo">Cena se koristi za vrednost otpisa — gde piše "—", upiši je preko ✏.</p>
+{% endif %}
+{% endblock %}

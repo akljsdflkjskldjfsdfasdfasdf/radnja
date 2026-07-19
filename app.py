@@ -1,8 +1,9 @@
 # app.py — glavna datoteka aplikacije: ekrani i čuvanje podataka.
 
+import sqlite3
 from datetime import date, timedelta
 
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, send_file, url_for
 
 import baza
 import uvoz_prodaje
@@ -68,9 +69,7 @@ def prijem_sacuvaj_novi():
     rok = request.form["rok"]
     kolicina = int(request.form["kolicina"])
 
-    # Cena je opciona; prihvatamo i zapez i tačku (129,99 ili 129.99).
-    cena_tekst = request.form.get("cena", "").strip().replace(",", ".")
-    cena = float(cena_tekst) if cena_tekst else None
+    cena = _u_cenu(request.form.get("cena"))
 
     veza = baza.konekcija()
     # "OR IGNORE": ako je neko u međuvremenu već dodao ovaj barkod, ne pravi duplikat.
@@ -91,6 +90,12 @@ def prijem_sacuvaj_novi():
     return redirect(url_for("prijem", poruka=f"✔ Nov proizvod {naziv}: {kolicina} kom, rok {rok}"))
 
 
+def _u_cenu(tekst):
+    """Cena je opciona; prihvatamo i zapetu i tačku (129,99 ili 129.99)."""
+    tekst = (tekst or "").strip().replace(",", ".")
+    return float(tekst) if tekst else None
+
+
 def _dan(broj):
     """Pravilan oblik reči: 1 dan, 2 dana, 21 dan..."""
     return "dan" if broj % 10 == 1 and broj % 100 != 11 else "dana"
@@ -98,14 +103,17 @@ def _dan(broj):
 
 @app.route("/istice")
 def istice():
-    """Ekran "Ističe uskoro": stavke kojima rok ističe u narednih N dana (default 3)."""
-    try:
-        dani = int(request.args.get("dani", 3))
-    except ValueError:
-        dani = 3
-
+    """Ekran "Ističe uskoro": filter 3/7/30 dana ili "sve" (svaka aktivna stavka)."""
+    izbor = request.args.get("dani", "3")
     danas = date.today()
-    granica = (danas + timedelta(days=dani)).isoformat()
+    if izbor == "sve":
+        granica = "9999-12-31"      # praktično: bez ograničenja
+    else:
+        try:
+            granica = (danas + timedelta(days=int(izbor))).isoformat()
+        except ValueError:
+            izbor = "3"
+            granica = (danas + timedelta(days=3)).isoformat()
 
     veza = baza.konekcija()
     redovi = veza.execute(
@@ -136,7 +144,7 @@ def istice():
             oznaka, boja = f"ističe za {razlika} {_dan(razlika)}", "ok"
         stavke.append(dict(red) | {"oznaka": oznaka, "boja": boja})
 
-    return render_template("istice.html", stavke=stavke, dani=dani)
+    return render_template("istice.html", stavke=stavke, izbor=izbor)
 
 
 @app.route("/stavka/<int:stavka_id>/status", methods=["POST"])
@@ -211,6 +219,110 @@ def prodaja_statistika():
     } for red in redovi]
 
     return render_template("prodaja.html", artikli=artikli, dani=dani)
+
+
+@app.route("/stavka/<int:stavka_id>/izmena")
+def stavka_izmena(stavka_id):
+    """Ekran za ispravku pogrešno unetog roka ili količine."""
+    veza = baza.konekcija()
+    stavka = veza.execute(
+        "SELECT s.id, s.rok, s.kolicina, s.datum_prijema, p.naziv "
+        "FROM stavke s JOIN proizvodi p ON p.id = s.proizvod_id WHERE s.id = ?",
+        (stavka_id,),
+    ).fetchone()
+    veza.close()
+    if stavka is None:
+        return redirect(url_for("istice"))
+    return render_template("izmena.html", stavka=stavka)
+
+
+@app.route("/stavka/<int:stavka_id>/izmena", methods=["POST"])
+def stavka_izmena_sacuvaj(stavka_id):
+    veza = baza.konekcija()
+    veza.execute(
+        "UPDATE stavke SET rok = ?, kolicina = ? WHERE id = ?",
+        (request.form["rok"], int(request.form["kolicina"]), stavka_id),
+    )
+    veza.commit()
+    veza.close()
+    return redirect(url_for("istice", dani="sve", poruka="✔ Unos izmenjen"))
+
+
+@app.route("/stavka/<int:stavka_id>/obrisi", methods=["POST"])
+def stavka_obrisi(stavka_id):
+    """Brisanje je za greške u kucanju — sklonjena roba ide u otpis, ne ovde."""
+    veza = baza.konekcija()
+    veza.execute("DELETE FROM stavke WHERE id = ?", (stavka_id,))
+    veza.commit()
+    veza.close()
+    return redirect(url_for("istice", dani="sve", poruka="✔ Unos obrisan"))
+
+
+@app.route("/stavka/<int:stavka_id>/vrati", methods=["POST"])
+def stavka_vrati(stavka_id):
+    """Poništi otpis (slučajan klik) — stavka se vraća u "aktivno"."""
+    veza = baza.konekcija()
+    veza.execute(
+        "UPDATE stavke SET status = 'aktivno', datum_promene = NULL WHERE id = ?",
+        (stavka_id,),
+    )
+    veza.commit()
+    veza.close()
+    return redirect(url_for("otpis", poruka="✔ Otpis poništen — stavka je vraćena"))
+
+
+@app.route("/proizvodi")
+def proizvodi():
+    """Šifarnik artikala: pregled i ulaz za izmenu naziva/cene."""
+    veza = baza.konekcija()
+    redovi = veza.execute(
+        "SELECT id, barkod, naziv, cena FROM proizvodi ORDER BY naziv"
+    ).fetchall()
+    veza.close()
+    lista = [{
+        "id": red["id"],
+        "barkod": red["barkod"],
+        "naziv": red["naziv"],
+        "cena_tekst": _dinari(red["cena"]) if red["cena"] is not None else "—",
+    } for red in redovi]
+    return render_template("proizvodi.html", proizvodi=lista)
+
+
+@app.route("/proizvod/<int:proizvod_id>/izmena")
+def proizvod_izmena(proizvod_id):
+    veza = baza.konekcija()
+    proizvod = veza.execute(
+        "SELECT id, barkod, naziv, cena FROM proizvodi WHERE id = ?", (proizvod_id,)
+    ).fetchone()
+    veza.close()
+    if proizvod is None:
+        return redirect(url_for("proizvodi"))
+    return render_template("proizvod_izmena.html", proizvod=proizvod)
+
+
+@app.route("/proizvod/<int:proizvod_id>/izmena", methods=["POST"])
+def proizvod_izmena_sacuvaj(proizvod_id):
+    veza = baza.konekcija()
+    veza.execute(
+        "UPDATE proizvodi SET naziv = ?, cena = ? WHERE id = ?",
+        (request.form["naziv"].strip(), _u_cenu(request.form.get("cena")), proizvod_id),
+    )
+    veza.commit()
+    veza.close()
+    return redirect(url_for("proizvodi", poruka="✔ Artikal izmenjen"))
+
+
+@app.route("/backup")
+def backup():
+    """Preuzmi kopiju cele baze — jedan fajl, čuvaj ga s vremena na vreme."""
+    izvor = baza.konekcija()
+    putanja_kopije = baza.PUTANJA_BAZE.with_name("kopija-baze.db")
+    kopija = sqlite3.connect(putanja_kopije)
+    izvor.backup(kopija)                 # sigurno kopiranje i dok aplikacija radi
+    kopija.close()
+    izvor.close()
+    return send_file(putanja_kopije, as_attachment=True,
+                     download_name=f"radnja-{date.today().isoformat()}.db")
 
 
 @app.route("/zalihe")
@@ -306,7 +418,7 @@ def otpis():
     veza = baza.konekcija()
     redovi = veza.execute(
         """
-        SELECT s.kolicina, s.datum_promene, p.naziv, p.cena
+        SELECT s.id, s.kolicina, s.datum_promene, p.naziv, p.cena
         FROM stavke s
         JOIN proizvodi p ON p.id = s.proizvod_id
         WHERE s.status = 'otpisano' AND s.datum_promene IS NOT NULL

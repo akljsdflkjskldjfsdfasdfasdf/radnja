@@ -101,6 +101,7 @@ form + .poruka, .poruka + .poruka { margin-top: 1rem; }
 .kartica.isteklo { border-left-color: #d00000; }  /* već isteklo */
 
 .kartica-naslov { display: flex; align-items: center; gap: 0.5rem; }
+.kartica-naslov .izmeni { margin-left: auto; text-decoration: none; font-size: 1.1rem; }
 .bedz {
     background: #ffba08;
     color: #333;
@@ -142,3 +143,20 @@ button.narandzasto { background: #e85d04; }
 .zbir .broj { font-size: 1.3rem; font-weight: bold; display: block; }
 .spisak { margin: 0.6rem 0 0; padding-left: 1.2rem; color: #444; }
 .spisak li { margin-bottom: 0.2rem; }
+
+/* Mala dugmad u redu teksta (npr. "Vrati" na otpisu) */
+.u-redu { display: inline; }
+button.sicusno {
+    width: auto;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.8rem;
+    margin: 0 0 0 0.5rem;
+    background: #6c757d;
+}
+
+footer {
+    text-align: center;
+    padding: 1.5rem 0 2rem;
+    font-size: 0.85rem;
+}
+footer a { color: #888; }

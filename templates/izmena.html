@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+<!-- izmena.html — ispravka pogrešno unetog roka ili količine, ili brisanje unosa. -->
+{% block sadrzaj %}
+<h1>Izmena unosa</h1>
+<p class="sivo">{{ stavka['naziv'] }} — unet {{ stavka['datum_prijema'] }}</p>
+
+<form method="post">
+    <label for="rok">Rok trajanja</label>
+    <input type="date" id="rok" name="rok" value="{{ stavka['rok'] }}" required>
+
+    <label for="kolicina">Količina</label>
+    <input type="number" id="kolicina" name="kolicina" min="1"
+           value="{{ stavka['kolicina'] }}" required>
+
+    <button type="submit">Sačuvaj izmenu</button>
+</form>
+
+<form method="post" action="{{ url_for('stavka_obrisi', stavka_id=stavka['id']) }}"
+      onsubmit="return confirm('Obriši ovaj unos? Brisanje je za greške u kucanju — ako je roba stvarno sklonjena s police, koristi Sklonjeno/otpisano.')">
+    <button class="malo crveno">Obriši unos (bio je pogrešan)</button>
+</form>
+
+<a class="link-nazad" href="{{ url_for('istice', dani='sve') }}">← Nazad</a>
+{% endblock %}
