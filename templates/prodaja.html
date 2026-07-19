@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+<!-- prodaja.html — top artikli: šta se najviše prodaje i kojom brzinom. -->
+{% block sadrzaj %}
+<h1>Top artikli</h1>
+
+<div class="filteri">
+    {% for n in [7, 30] %}
+    <a href="{{ url_for('prodaja_statistika', dani=n) }}"
+       class="{{ 'aktivan' if dani == n else '' }}">{{ n }} dana</a>
+    {% endfor %}
+    <a href="{{ url_for('uvoz_ekran') }}">⬆ Uvezi prodaju</a>
+</div>
+
+{% if not artikli %}
+<p class="sivo">Nema prodaje u poslednjih {{ dani }} dana.
+Uvezi CSV iz kase pa se vrati ovde.</p>
+{% else %}
+<table class="tabela">
+    <tr><th>#</th><th>Artikal</th><th>Prodato</th><th>Kom/dan</th></tr>
+    {% for a in artikli %}
+    <tr>
+        <td class="sivo">{{ loop.index }}.</td>
+        <td>{{ a.naziv }}</td>
+        <td><strong>{{ a.ukupno }}</strong></td>
+        <td>{{ a.brzina }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

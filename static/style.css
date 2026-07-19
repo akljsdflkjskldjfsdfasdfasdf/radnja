@@ -116,6 +116,25 @@ button.malo { padding: 0.6rem; font-size: 0.95rem; margin-top: 0.6rem; }
 button.crveno { background: #9d0208; }
 button.narandzasto { background: #e85d04; }
 
+/* Tabela (top artikli i slično) */
+.tabela {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.tabela th, .tabela td {
+    text-align: left;
+    padding: 0.7rem 0.6rem;
+    border-bottom: 1px solid #eee;
+}
+.tabela th {
+    background: #2d6a4f;
+    color: white;
+    font-size: 0.9rem;
+}
+
 /* Ekran "Otpis po mesecima" */
 .kartica h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
 .zbir { display: flex; gap: 1.2rem; flex-wrap: wrap; }

@@ -170,6 +170,49 @@ def promeni_status(stavka_id):
     ))
 
 
+def _lep_broj(broj, decimala=1):
+    """9.0 prikaži kao "9", a 1.2857 kao "1,3" (srpska zapeta)."""
+    if broj == int(broj):
+        return str(int(broj))
+    return f"{broj:.{decimala}f}".replace(".", ",")
+
+
+@app.route("/prodaja")
+def prodaja_statistika():
+    """Top artikli: šta se najviše prodaje i kojom brzinom (komada dnevno)."""
+    try:
+        dani = int(request.args.get("dani", 7))
+    except ValueError:
+        dani = 7
+
+    # Period: poslednjih N dana, računajući i danas.
+    od = (date.today() - timedelta(days=dani - 1)).isoformat()
+
+    veza = baza.konekcija()
+    redovi = veza.execute(
+        """
+        SELECT p.naziv, SUM(pr.kolicina) AS ukupno
+        FROM prodaja pr
+        JOIN proizvodi p ON p.id = pr.proizvod_id
+        WHERE pr.datum >= ?
+        GROUP BY pr.proizvod_id
+        ORDER BY ukupno DESC
+        """,
+        (od,),
+    ).fetchall()
+    veza.close()
+
+    artikli = [{
+        "naziv": red["naziv"],
+        "ukupno": _lep_broj(red["ukupno"]),
+        # Brzina prodaje: prosek po danu — ova brojka će u Fazi 3
+        # određivati kada je vreme za poručivanje.
+        "brzina": _lep_broj(red["ukupno"] / dani),
+    } for red in redovi]
+
+    return render_template("prodaja.html", artikli=artikli, dani=dani)
+
+
 @app.route("/prodaja/uvoz")
 def uvoz_ekran():
     """Ekran za uvoz prodaje iz CSV fajla."""
