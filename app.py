@@ -169,6 +169,62 @@ def promeni_status(stavka_id):
     ))
 
 
+MESECI = {
+    "01": "januar", "02": "februar", "03": "mart", "04": "april",
+    "05": "maj", "06": "jun", "07": "jul", "08": "avgust",
+    "09": "septembar", "10": "oktobar", "11": "novembar", "12": "decembar",
+}
+
+
+def _mesec_naziv(kljuc):
+    """Od "2026-07" napravi "jul 2026"."""
+    godina, mesec = kljuc.split("-")
+    return f"{MESECI[mesec]} {godina}"
+
+
+def _dinari(iznos):
+    """Broj u tekst sa zapetom: 959.94 -> "959,94"."""
+    return f"{iznos:.2f}".replace(".", ",")
+
+
+@app.route("/otpis")
+def otpis():
+    """Mesečni zbir otpisa: koliko je stavki sklonjeno i koliko to vredi."""
+    veza = baza.konekcija()
+    redovi = veza.execute(
+        """
+        SELECT s.kolicina, s.datum_promene, p.naziv, p.cena
+        FROM stavke s
+        JOIN proizvodi p ON p.id = s.proizvod_id
+        WHERE s.status = 'otpisano' AND s.datum_promene IS NOT NULL
+        ORDER BY s.datum_promene DESC
+        """
+    ).fetchall()
+    veza.close()
+
+    # Grupišemo po mesecu ("2026-07"), od najnovijeg ka starijem.
+    meseci = {}
+    for red in redovi:
+        kljuc = red["datum_promene"][:7]
+        grupa = meseci.setdefault(kljuc, {
+            "naziv": _mesec_naziv(kljuc),
+            "stavki": 0, "komada": 0, "vrednost": 0.0, "bez_cene": 0,
+            "lista": [],
+        })
+        grupa["stavki"] += 1
+        grupa["komada"] += red["kolicina"]
+        if red["cena"] is None:
+            grupa["bez_cene"] += 1          # bez cene ne možemo u vrednost
+        else:
+            grupa["vrednost"] += red["kolicina"] * red["cena"]
+        grupa["lista"].append(red)
+
+    for grupa in meseci.values():
+        grupa["vrednost_tekst"] = _dinari(grupa["vrednost"])
+
+    return render_template("otpis.html", meseci=meseci)
+
+
 # Ovaj deo se izvršava samo kad na laptopu pokrenemo "python app.py".
 # Na hostingu aplikaciju pokreće server (PythonAnywhere), pa se ovo preskače.
 if __name__ == "__main__":

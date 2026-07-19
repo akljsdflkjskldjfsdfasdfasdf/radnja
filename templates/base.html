@@ -12,6 +12,7 @@
     <header>
         <a href="{{ url_for('prijem') }}">📦 Prijem</a>
         <a href="{{ url_for('istice') }}">⏰ Ističe</a>
+        <a href="{{ url_for('otpis') }}">🗑 Otpis</a>
     </header>
     <main>
         {% if request.args.get('poruka') %}

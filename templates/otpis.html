@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+<!-- otpis.html — mesečni zbir otpisa: po mesecu broj stavki, komada i vrednost. -->
+{% block sadrzaj %}
+<h1>Otpis po mesecima</h1>
+
+{% if not meseci %}
+<p class="sivo">Još ništa nije otpisano. 🎉</p>
+{% endif %}
+
+{% for kljuc, m in meseci.items() %}
+<div class="kartica">
+    <h2>{{ m.naziv }}</h2>
+    <div class="zbir">
+        <div><span class="broj">{{ m.stavki }}</span> stavki</div>
+        <div><span class="broj">{{ m.komada }}</span> komada</div>
+        <div><span class="broj">{{ m.vrednost_tekst }}</span> din</div>
+    </div>
+    {% if m.bez_cene %}
+    <p class="sivo">({{ m.bez_cene }} od {{ m.stavki }} stavki nema upisanu cenu — prava vrednost je veća)</p>
+    {% endif %}
+    <ul class="spisak">
+        {% for red in m.lista %}
+        <li>{{ red['datum_promene'] }} — {{ red['naziv'] }}, {{ red['kolicina'] }} kom</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}
+{% endblock %}
