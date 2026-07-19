@@ -65,3 +65,49 @@ button.sekundarno { background: #40916c; }
 .sivo { color: #666; }
 #skener { margin-top: 1rem; }
 .link-nazad { display: inline-block; margin-top: 1rem; }
+
+/* Ekran "Ističe uskoro" */
+.filteri { margin: 0.5rem 0 1rem; }
+.filteri a {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    margin-right: 0.4rem;
+    border-radius: 999px;
+    background: white;
+    border: 1px solid #ccc;
+    color: #333;
+    text-decoration: none;
+}
+.filteri a.aktivan {
+    background: #2d6a4f;
+    border-color: #2d6a4f;
+    color: white;
+    font-weight: bold;
+}
+
+.kartica {
+    background: white;
+    border: 1px solid #ddd;
+    border-left: 6px solid #95d5b2;   /* podrazumevano: nije hitno */
+    border-radius: 8px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+.kartica.hitno { border-left-color: #e85d04; }    /* danas/sutra */
+.kartica.isteklo { border-left-color: #d00000; }  /* već isteklo */
+
+.kartica-naslov { display: flex; align-items: center; gap: 0.5rem; }
+.bedz {
+    background: #ffba08;
+    color: #333;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+}
+
+.kartica-dugmad { display: flex; gap: 0.5rem; }
+.kartica-dugmad form { flex: 1; }
+button.malo { padding: 0.6rem; font-size: 0.95rem; margin-top: 0.6rem; }
+button.crveno { background: #9d0208; }
+button.narandzasto { background: #e85d04; }

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+<!-- istice.html — ekran "Ističe uskoro": lista stavki sortirana po roku,
+     sa dugmadima "Sklonjeno/otpisano" i "Sniženo" na svakoj. -->
+{% block sadrzaj %}
+<h1>Ističe uskoro</h1>
+
+<div class="filteri">
+    {% for n in [3, 7, 30] %}
+    <a href="{{ url_for('istice', dani=n) }}"
+       class="{{ 'aktivan' if dani == n else '' }}">{{ n }} dana</a>
+    {% endfor %}
+</div>
+
+{% if not stavke %}
+<p class="sivo">Nema stavki koje ističu u narednih {{ dani }} dana. 🎉</p>
+{% endif %}
+
+{% for s in stavke %}
+<div class="kartica {{ s.boja }}">
+    <div class="kartica-naslov">
+        <strong>{{ s.naziv }}</strong>
+        {% if s.status == 'snizeno' %}<span class="bedz">SNIŽENO</span>{% endif %}
+    </div>
+    <div class="sivo">{{ s.oznaka }} ({{ s.rok }}) — {{ s.kolicina }} kom</div>
+    <div class="kartica-dugmad">
+        <form method="post" action="{{ url_for('promeni_status', stavka_id=s.id) }}"
+              onsubmit="return confirm('Označi kao sklonjeno/otpisano?')">
+            <input type="hidden" name="status" value="otpisano">
+            <input type="hidden" name="dani" value="{{ dani }}">
+            <button class="malo crveno">Sklonjeno / otpisano</button>
+        </form>
+        {% if s.status != 'snizeno' %}
+        <form method="post" action="{{ url_for('promeni_status', stavka_id=s.id) }}">
+            <input type="hidden" name="status" value="snizeno">
+            <input type="hidden" name="dani" value="{{ dani }}">
+            <button class="malo narandzasto">Sniženo</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

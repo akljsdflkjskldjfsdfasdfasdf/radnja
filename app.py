@@ -1,5 +1,7 @@
 # app.py — glavna datoteka aplikacije: ekrani i čuvanje podataka.
 
+from datetime import date, timedelta
+
 from flask import Flask, redirect, render_template, request, url_for
 
 import baza
@@ -86,6 +88,85 @@ def prijem_sacuvaj_novi():
     veza.close()
 
     return redirect(url_for("prijem", poruka=f"✔ Nov proizvod {naziv}: {kolicina} kom, rok {rok}"))
+
+
+def _dan(broj):
+    """Pravilan oblik reči: 1 dan, 2 dana, 21 dan..."""
+    return "dan" if broj % 10 == 1 and broj % 100 != 11 else "dana"
+
+
+@app.route("/istice")
+def istice():
+    """Ekran "Ističe uskoro": stavke kojima rok ističe u narednih N dana (default 3)."""
+    try:
+        dani = int(request.args.get("dani", 3))
+    except ValueError:
+        dani = 3
+
+    danas = date.today()
+    granica = (danas + timedelta(days=dani)).isoformat()
+
+    veza = baza.konekcija()
+    redovi = veza.execute(
+        """
+        SELECT s.id, s.rok, s.kolicina, s.status, p.naziv
+        FROM stavke s
+        JOIN proizvodi p ON p.id = s.proizvod_id
+        WHERE s.status != 'otpisano' AND s.rok <= ?
+        ORDER BY s.rok
+        """,
+        (granica,),
+    ).fetchall()
+    veza.close()
+
+    # Za svaku stavku spremimo čitljivu oznaku ("ističe sutra") i boju hitnosti.
+    stavke = []
+    for red in redovi:
+        razlika = (date.fromisoformat(red["rok"]) - danas).days
+        if razlika < -1:
+            oznaka, boja = f"isteklo pre {-razlika} {_dan(-razlika)}", "isteklo"
+        elif razlika == -1:
+            oznaka, boja = "isteklo juče", "isteklo"
+        elif razlika == 0:
+            oznaka, boja = "ističe DANAS", "hitno"
+        elif razlika == 1:
+            oznaka, boja = "ističe sutra", "hitno"
+        else:
+            oznaka, boja = f"ističe za {razlika} {_dan(razlika)}", "ok"
+        stavke.append(dict(red) | {"oznaka": oznaka, "boja": boja})
+
+    return render_template("istice.html", stavke=stavke, dani=dani)
+
+
+@app.route("/stavka/<int:stavka_id>/status", methods=["POST"])
+def promeni_status(stavka_id):
+    """Dugmad na stavci: označi kao "otpisano" (sklonjeno) ili "snizeno"."""
+    novi_status = request.form["status"]
+    if novi_status not in ("otpisano", "snizeno"):
+        return redirect(url_for("istice"))
+
+    veza = baza.konekcija()
+    stavka = veza.execute(
+        "SELECT p.naziv FROM stavke s JOIN proizvodi p ON p.id = s.proizvod_id WHERE s.id = ?",
+        (stavka_id,),
+    ).fetchone()
+    if stavka is None:
+        veza.close()
+        return redirect(url_for("istice"))
+
+    veza.execute(
+        "UPDATE stavke SET status = ?, datum_promene = date('now') WHERE id = ?",
+        (novi_status, stavka_id),
+    )
+    veza.commit()
+    veza.close()
+
+    tekst = "sklonjena/otpisana" if novi_status == "otpisano" else "označena kao snižena"
+    return redirect(url_for(
+        "istice",
+        dani=request.form.get("dani", 3),
+        poruka=f"✔ {stavka['naziv']}: {tekst}",
+    ))
 
 
 # Ovaj deo se izvršava samo kad na laptopu pokrenemo "python app.py".
