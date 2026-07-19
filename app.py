@@ -213,6 +213,54 @@ def prodaja_statistika():
     return render_template("prodaja.html", artikli=artikli, dani=dani)
 
 
+@app.route("/zalihe")
+def zalihe():
+    """Stanje zaliha po artiklu: primljeno − prodato − otpisano."""
+    veza = baza.konekcija()
+    sid = trenutna_radnja(veza)
+
+    def zbirovi(upit, parametri):
+        """Vrati rečnik: proizvod_id -> zbir količina."""
+        return {red["proizvod_id"]: red["ukupno"]
+                for red in veza.execute(upit, parametri).fetchall()}
+
+    prijemi = zbirovi(
+        "SELECT proizvod_id, SUM(kolicina) AS ukupno FROM stavke "
+        "WHERE store_id = ? GROUP BY proizvod_id", (sid,))
+    otpisi = zbirovi(
+        "SELECT proizvod_id, SUM(kolicina) AS ukupno FROM stavke "
+        "WHERE store_id = ? AND status = 'otpisano' GROUP BY proizvod_id", (sid,))
+    prodaje = zbirovi(
+        "SELECT proizvod_id, SUM(kolicina) AS ukupno FROM prodaja "
+        "WHERE store_id = ? GROUP BY proizvod_id", (sid,))
+    nazivi = {red["id"]: red["naziv"]
+              for red in veza.execute("SELECT id, naziv FROM proizvodi").fetchall()}
+    veza.close()
+
+    redovi = []
+    for pid, naziv in nazivi.items():
+        prijem = prijemi.get(pid, 0)
+        otpis = otpisi.get(pid, 0)
+        prodato = prodaje.get(pid, 0)
+        if prijem == 0 and otpis == 0 and prodato == 0:
+            continue                      # artikal bez ikakvog prometa ne gura se u tabelu
+        stanje = prijem - prodato - otpis
+        redovi.append({
+            "naziv": naziv,
+            "prijem": _lep_broj(prijem),
+            "prodato": _lep_broj(prodato),
+            "otpis": _lep_broj(otpis),
+            "stanje": _lep_broj(stanje),
+            "minus": stanje < 0,
+        })
+
+    # Najmanje stanje na vrh — to je ono što treba prvo videti.
+    redovi.sort(key=lambda red: float(str(red["stanje"]).replace(",", ".")))
+    ima_minusa = any(red["minus"] for red in redovi)
+
+    return render_template("zalihe.html", redovi=redovi, ima_minusa=ima_minusa)
+
+
 @app.route("/prodaja/uvoz")
 def uvoz_ekran():
     """Ekran za uvoz prodaje iz CSV fajla."""

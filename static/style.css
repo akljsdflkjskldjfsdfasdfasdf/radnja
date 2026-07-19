@@ -134,6 +134,7 @@ button.narandzasto { background: #e85d04; }
     color: white;
     font-size: 0.9rem;
 }
+.tabela td.minus { color: #d00000; }
 
 /* Ekran "Otpis po mesecima" */
 .kartica h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }

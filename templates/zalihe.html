@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+<!-- zalihe.html — stanje zaliha po artiklu: primljeno − prodato − otpisano. -->
+{% block sadrzaj %}
+<h1>Stanje zaliha</h1>
+
+{% if not redovi %}
+<p class="sivo">Još nema podataka — primi robu kroz 📦 Prijem i uvezi prodaju kroz 📈 Prodaja.</p>
+{% else %}
+<table class="tabela">
+    <tr><th>Artikal</th><th>Primljeno</th><th>Prodato</th><th>Otpis</th><th>Stanje</th></tr>
+    {% for red in redovi %}
+    <tr>
+        <td>{{ red.naziv }}</td>
+        <td>{{ red.prijem }}</td>
+        <td>{{ red.prodato }}</td>
+        <td>{{ red.otpis }}</td>
+        <td class="{{ 'minus' if red.minus else '' }}"><strong>{{ red.stanje }}</strong></td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% if ima_minusa %}
+<p class="poruka zuta">Stanje u minusu znači da negde curi podatak: prodato je nešto
+što nije prošlo kroz prijem u aplikaciji (ili je količina pri prijemu pogrešna).
+To nije kvar — to je znak gde treba proveriti.</p>
+{% endif %}
+{% endif %}
+{% endblock %}
