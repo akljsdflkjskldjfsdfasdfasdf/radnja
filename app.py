@@ -19,6 +19,12 @@ def trenutna_radnja(veza):
     return veza.execute("SELECT id FROM radnje LIMIT 1").fetchone()["id"]
 
 
+@app.route("/pomoc")
+def pomoc():
+    """Uputstvo: šta je svaki ekran, čemu služi i kako se koristi."""
+    return render_template("pomoc.html")
+
+
 @app.route("/")
 def prijem():
     """Početni ekran: unos barkoda (kamerom ili ručno)."""

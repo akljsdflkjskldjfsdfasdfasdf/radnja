@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+<!-- pomoc.html — uputstvo: šta je svaki ekran, čemu služi i kako se koristi. -->
+{% block sadrzaj %}
+<h1>Uputstvo</h1>
+<p class="sivo">Kratko objašnjenje svakog dela aplikacije — po istom redosledu kao u meniju.</p>
+
+<div class="kartica">
+    <h2>📦 Prijem</h2>
+    <p><strong>Šta je:</strong> ekran gde roba ulazi u sistem, čim stigne u radnju.</p>
+    <p><strong>Zašto:</strong> ovde sve počinje. Bez unosa aplikacija ne zna šta imaš,
+    kad ističe niti šta se prodaje — sve ostalo se gradi na ovom koraku.</p>
+    <p><strong>Kako:</strong> skeniraj barkod kamerom (ili ga ukucaj). Ako je proizvod
+    poznat, upiši samo rok i količinu. Ako je nov, upiši i naziv (cena je opciona) —
+    desetak sekundi po artiklu.</p>
+</div>
+
+<div class="kartica">
+    <h2>⏰ Ističe</h2>
+    <p><strong>Šta je:</strong> spisak robe kojoj se bliži rok trajanja, sortiran
+    od najhitnijeg (crveno = već isteklo, narandžasto = danas/sutra).</p>
+    <p><strong>Zašto:</strong> da se roba skloni ili snizi <em>pre</em> nego što
+    istekne na polici — sprečava kaznu od inspekcije i gubitak novca.</p>
+    <p><strong>Kako:</strong> otvori svako jutro, filtriraj 3/7/30 dana ili "sve".
+    Za svaku stavku klikni <strong>"Sniženo"</strong> (ostaje na polici sa popustom)
+    ili <strong>"Sklonjeno/otpisano"</strong> (skinuta je s police). Preko ✏ ispravljaš
+    pogrešno unet rok ili količinu.</p>
+</div>
+
+<div class="kartica">
+    <h2>🗑 Otpis</h2>
+    <p><strong>Šta je:</strong> mesečni izveštaj koliko je robe bačeno i kolika je
+    ta vrednost u dinarima.</p>
+    <p><strong>Zašto:</strong> ono što se ne meri, ne može ni da se smanji. Ovo je
+    brojka koju pokazuješ gazdi — i prvi korak ka manjem otpisu.</p>
+    <p><strong>Kako:</strong> ne unosiš ništa ovde — ekran se puni sam, čim klikneš
+    "Sklonjeno/otpisano" na "Ističe". Preko ↩ Vrati poništavaš slučajan klik.</p>
+</div>
+
+<div class="kartica">
+    <h2>📈 Prodaja</h2>
+    <p><strong>Šta je:</strong> top artikli — šta se najviše prodaje i kojom
+    brzinom (komada dnevno).</p>
+    <p><strong>Zašto:</strong> pokazuje šta ti nosi promet, a "kom/dan" je brojka
+    koja će u sledećoj fazi sama računati kad je vreme za poručivanje.</p>
+    <p><strong>Kako:</strong> uvezi dnevni izvoz prodaje iz kase (dugme
+    "⬆ Uvezi prodaju", CSV fajl) → pogledaj rang listu za 7 ili 30 dana.</p>
+</div>
+
+<div class="kartica">
+    <h2>📊 Zalihe</h2>
+    <p><strong>Šta je:</strong> koliko je od svakog artikla ostalo:
+    primljeno − prodato − otpisano.</p>
+    <p><strong>Zašto:</strong> vidiš šta ponestaje pre nego što se polica isprazni.
+    Crveni minus znači da se nešto prodalo mimo prijema u aplikaciji — koristan
+    znak gde treba proveriti, ne kvar.</p>
+    <p><strong>Kako:</strong> samo se čita, ništa se ovde ne unosi.</p>
+</div>
+
+<div class="kartica">
+    <h2>🏷 Artikli</h2>
+    <p><strong>Šta je:</strong> šifarnik — spisak svih proizvoda sa nazivom,
+    barkodom i cenom.</p>
+    <p><strong>Zašto:</strong> cena je potrebna da "Otpis" pokaže dinare, ne
+    samo broj komada.</p>
+    <p><strong>Kako:</strong> preko ✏ upišeš ili ispraviš naziv i cenu bilo kog
+    artikla, i posle prvog dodavanja pri prijemu.</p>
+</div>
+
+<div class="kartica">
+    <h2>💾 Preuzmi kopiju baze</h2>
+    <p><strong>Šta je:</strong> dugme na dnu svake stranice — skida ceo fajl
+    baze na telefon ili računar.</p>
+    <p><strong>Zašto:</strong> osiguranje. Ako server ikad otkaže, podaci nisu
+    izgubljeni.</p>
+    <p><strong>Kako:</strong> klik, sačuvaj fajl negde sigurno. Dobra navika:
+    jednom nedeljno.</p>
+</div>
+{% endblock %}
