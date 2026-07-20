@@ -83,34 +83,15 @@ def napuni():
         )
         id_po_barkodu[barkod] = cur.lastrowid
 
-    # 3. Prijemi (stavke) — svaki proizvod ima 1–2 prijema sa raznim rokovima
-    broj_prijema = 0
-    for barkod, naziv, cena, dnevno in PROIZVODI:
-        pid = id_po_barkodu[barkod]
-        if kratak(naziv):
-            # sveža roba: rok od -2 do +4 dana (neki već istekli — da "Ističe" ima šta da pokaže)
-            rokovi = [random.randint(-2, 4)]
-        else:
-            # trajna roba: jedan bliži i jedan dalji rok
-            rokovi = [random.randint(3, 20), random.randint(60, 300)]
-        for pomak in rokovi:
-            rok = (danas + timedelta(days=pomak)).isoformat()
-            kolicina = random.randint(8, 40)
-            veza.execute(
-                "INSERT INTO stavke (store_id, proizvod_id, rok, kolicina, datum_prijema) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (store_id, pid, rok, kolicina,
-                 (danas - timedelta(days=random.randint(1, 20))).isoformat()),
-            )
-            broj_prijema += 1
-
-    # 4. Prodaja — poslednjih 30 dana, dnevna količina oko proseka artikla
+    # 3. Prodaja PRVO — poslednjih 30 dana, dnevna količina oko proseka artikla.
+    # Pamtimo koliko je ukupno prodato, da prijem posle toga pokrijemo realno.
     broj_prodaja = 0
+    prodato_ukupno = {}
     for barkod, naziv, cena, dnevno in PROIZVODI:
         pid = id_po_barkodu[barkod]
+        ukupno = 0
         for pre in range(1, 31):
             dan = (danas - timedelta(days=pre)).isoformat()
-            # vikendom se prodaje više, ponekad 0 (nije bilo prodaje tog dana)
             kolicina = max(0, int(random.gauss(dnevno, dnevno * 0.4)))
             if kolicina == 0:
                 continue
@@ -118,18 +99,65 @@ def napuni():
                 "INSERT INTO prodaja (store_id, proizvod_id, datum, kolicina) VALUES (?, ?, ?, ?)",
                 (store_id, pid, dan, kolicina),
             )
+            ukupno += kolicina
             broj_prodaja += 1
+        prodato_ukupno[barkod] = ukupno
 
-    # 5. Otpisi — istorija otpisane robe kroz prošlih 45 dana (ovaj i prošli mesec),
-    # da izveštaj "Otpis" ima šta da pokaže. Otpisujemo uglavnom kvarljivu robu.
+    # 4. Prijemi — roba stiže kroz ceo mesec i POKRIVA prodaju + mala zaliha na kraju,
+    # da stanje zaliha bude realan mali plus (npr. par dana robe), a ne minus.
+    broj_prijema = 0
+    for barkod, naziv, cena, dnevno in PROIZVODI:
+        pid = id_po_barkodu[barkod]
+        prodato = prodato_ukupno[barkod]
+        zaliha = max(3, round(dnevno * random.uniform(2, 4)))   # koliko ostaje na stanju
+        za_nabaviti = prodato + zaliha
+
+        # Kvarljiva roba stiže u više malih isporuka, trajna u par većih.
+        broj_isporuka = 10 if kratak(naziv) else random.randint(2, 4)
+        po_isporuci = max(1, za_nabaviti // broj_isporuka)
+        preostalo = za_nabaviti
+        for i in range(broj_isporuka):
+            kolicina = preostalo if i == broj_isporuka - 1 else po_isporuci
+            preostalo -= kolicina
+            if kolicina <= 0:
+                continue
+            if kratak(naziv):
+                pomak = random.randint(1, 10)     # sveža roba: rok za nedelju-dve
+            else:
+                pomak = random.randint(30, 300)   # trajna roba: meseci
+            veza.execute(
+                "INSERT INTO stavke (store_id, proizvod_id, rok, kolicina, datum_prijema) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (store_id, pid, (danas + timedelta(days=pomak)).isoformat(), kolicina,
+                 (danas - timedelta(days=random.randint(0, 20))).isoformat()),
+            )
+            broj_prijema += 1
+
+    # 5. Malo kvarljive robe koja UPRAVO ističe ili je istekla — da "Ističe" ekran
+    # ima crvene/narandžaste stavke za demo (male količine, realno).
     kvarljivi = [b for b, naziv, *_ in PROIZVODI if kratak(naziv)]
+    for barkod in kvarljivi:
+        pid = id_po_barkodu[barkod]
+        for _ in range(random.randint(1, 2)):
+            pomak = random.randint(-1, 2)        # od "isteklo juče" do "ističe za 2 dana"
+            veza.execute(
+                "INSERT INTO stavke (store_id, proizvod_id, rok, kolicina, datum_prijema) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (store_id, pid, (danas + timedelta(days=pomak)).isoformat(),
+                 random.randint(1, 4),
+                 (danas - timedelta(days=3)).isoformat()),
+            )
+            broj_prijema += 1
+
+    # 6. Otpisi — istorija otpisane robe kroz prošlih 45 dana (ovaj i prošli mesec),
+    # da izveštaj "Otpis" ima šta da pokaže. Male količine, uglavnom kvarljiva roba.
+    # (Otpisana stavka ulazi i u prijem i u otpis, pa ne kvari stanje zaliha.)
     broj_otpisa = 0
     for _ in range(16):
         barkod = random.choice(kvarljivi)
         pid = id_po_barkodu[barkod]
         pre_dana = random.randint(0, 12) if broj_otpisa % 2 == 0 else random.randint(32, 45)
         datum_otpisa = danas - timedelta(days=pre_dana)
-        # Otpisana stavka: primljena par dana ranije, rok istekao na dan otpisa.
         veza.execute(
             "INSERT INTO stavke (store_id, proizvod_id, rok, kolicina, status, "
             "datum_prijema, datum_promene) VALUES (?, ?, ?, ?, 'otpisano', ?, ?)",
@@ -137,6 +165,7 @@ def napuni():
              (datum_otpisa - timedelta(days=random.randint(2, 5))).isoformat(),
              datum_otpisa.isoformat()),
         )
+        broj_prijema += 1
         broj_otpisa += 1
 
     veza.commit()
