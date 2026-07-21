@@ -2,11 +2,20 @@
 <!-- uvoz.html — ekran za uvoz prodaje iz CSV fajla (izvoz iz kasa-programa). -->
 {% block sadrzaj %}
 <h1>Uvoz prodaje</h1>
-<p class="sivo">Izaberi CSV fajl sa prodajom iz kase. Potrebne kolone:
-<strong>datum, barkod, kolicina</strong> (naziv nije obavezan).</p>
+<p class="sivo">Izaberi fajl sa prodajom iz kase — <strong>CSV ili Excel</strong>
+(npr. BizniSoft izveštaj "promet po artiklima" izvezen u Excel).
+Potrebne kolone: <strong>barkod i kolicina</strong>; naziv nije obavezan.</p>
 
 <form method="post" enctype="multipart/form-data">
-    <input type="file" name="fajl" accept=".csv,text/csv" required>
+    <input type="file" name="fajl"
+           accept=".csv,.xlsx,.xlsm,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+           required>
+
+    <label for="datum_prodaje">Dan prodaje</label>
+    <input type="date" id="datum_prodaje" name="datum_prodaje" value="{{ juce }}">
+    <p class="sivo">Koristi se samo ako fajl nema svoju kolonu "datum" —
+    ako je ima, datum iz fajla je glavni.</p>
+
     <button type="submit">Uvezi</button>
 </form>
 

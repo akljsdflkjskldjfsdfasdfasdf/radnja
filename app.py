@@ -381,23 +381,28 @@ def zalihe():
 
 @app.route("/prodaja/uvoz")
 def uvoz_ekran():
-    """Ekran za uvoz prodaje iz CSV fajla."""
-    return render_template("uvoz.html", rezultat=None)
+    """Ekran za uvoz prodaje iz CSV ili Excel fajla."""
+    juce = (date.today() - timedelta(days=1)).isoformat()
+    return render_template("uvoz.html", rezultat=None, juce=juce)
 
 
 @app.route("/prodaja/uvoz", methods=["POST"])
 def uvoz_obrada():
     """Stigao fajl — pročitaj ga i prikaži izveštaj šta je uvezeno."""
+    juce = (date.today() - timedelta(days=1)).isoformat()
     fajl = request.files.get("fajl")
     if fajl is None or fajl.filename == "":
-        return render_template("uvoz.html", rezultat={
+        return render_template("uvoz.html", juce=juce, rezultat={
             "ok": False, "poruka_greske": "Nisi izabrao fajl.",
         })
 
     veza = baza.konekcija()
-    rezultat = uvoz_prodaje.uvezi_csv(fajl.read(), trenutna_radnja(veza), veza)
+    rezultat = uvoz_prodaje.uvezi_fajl(
+        fajl.read(), fajl.filename, trenutna_radnja(veza), veza,
+        podrazumevani_datum=uvoz_prodaje._u_datum(request.form.get("datum_prodaje")),
+    )
     veza.close()
-    return render_template("uvoz.html", rezultat=rezultat)
+    return render_template("uvoz.html", rezultat=rezultat, juce=juce)
 
 
 MESECI = {
